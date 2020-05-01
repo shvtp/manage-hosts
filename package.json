@@ -1,0 +1,19 @@
+{
+  "name": "manage-hosts",
+  "version": "1.0.0",
+  "description": "Managing the hosts and ip addresses in /etc/hosts file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shivam-thapar/manage-hosts.git"
+  },
+  "author": "Shivam Thapar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shivam-thapar/manage-hosts/issues"
+  },
+  "homepage": "https://github.com/shivam-thapar/manage-hosts#readme"
+}
