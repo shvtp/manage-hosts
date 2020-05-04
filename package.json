@@ -15,5 +15,9 @@
   "bugs": {
     "url": "https://github.com/shivam-thapar/manage-hosts/issues"
   },
-  "homepage": "https://github.com/shivam-thapar/manage-hosts#readme"
+  "homepage": "https://github.com/shivam-thapar/manage-hosts#readme",
+  "dependencies": {
+    "moment": "^2.25.1",
+    "yargs": "^15.3.1"
+  }
 }
