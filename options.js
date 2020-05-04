@@ -1,5 +1,5 @@
-const helper = require("./helper");
-const processes = require("./processes");
+const helper = require("./modules/utils");
+const processes = require("./modules/processes");
 
 // This object stores the properties of all options available for passing in arguments
 // And a custom function key (callBackFn) which will be executed when that option is passed

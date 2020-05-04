@@ -1,4 +1,4 @@
-const helper = require("./helper");
+const helper = require("./utils");
 /**
  * This file exports all available processing that can be done on the hosts file
  */
