@@ -7,7 +7,8 @@ const constants = {
         ipDomain: /^(#+)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})([\s\S]+)$/gi,
         comment: /^(#+)?([\s\S]+)$/gi
     },
-    env: ['dev','local','prod','uat','stage']
+    env: ['dev','local','prod','uat','stage'],
+    defaultGroupNamePrefix: 'Group #'
 }
 
 module.exports = constants;

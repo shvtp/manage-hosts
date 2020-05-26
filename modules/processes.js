@@ -1,5 +1,6 @@
 const utils = require("./utils");
 const contants = require("./constants");
+const colors = require("colors");
 const fs = require("fs");
 const os = require("os");
 /**
@@ -14,49 +15,138 @@ function processes() {
 
     // Function that lists the ip and domains in hosts file
     self.list = function() {
-        const fileData = readFile(utility.getFullFilePath());
-        let lineInfo = [];
-        let prevLineInfo = newLineInfo();
-        fileData.forEach((line, lineNumber) => {
-            let currentLineInfo = getLineInfo(line, lineNumber);
-            if (!prevLineInfo.isValid && !prevLineInfo.isEmpty && currentLineInfo.isValid) {
-                lineInfo[lineNumber - 1] = markAsGroup(prevLineInfo);
-            }
-            lineInfo[lineNumber] = currentLineInfo;
-            prevLineInfo = currentLineInfo;
-        });
-        print(lineInfo);
+        print(parseFileData());
+    }
+
+    // Wrapper to function that backs up the current hosts file to the file provided by user.
+    self.backup = function() {
+        return backupFile(true);
     }
 
     // Function that backs up the current hosts file to the file provided by user.
-    self.backup = function() {
-        fs.copyFileSync(utility.getFullFilePath(), utility.getBackupFilePath());
-        console.log("Backed up successfully to " + utility.getBackupFilePath());
+    function backupFile(verbose) {
+        var backupFilePath = utility.getBackupFilePath();
+        fs.copyFileSync(utility.getFullFilePath(), backupFilePath);
+        if (verbose)
+            console.log("Backed up successfully to " + backupFilePath);
+        return backupFilePath;
+    }
+
+    function restore(filePath) {
+        fs.copyFileSync(filePath, utility.getFullFilePath());
+    }
+
+    // Function that activate line or group number
+    self.activate = function(optionPassed) {
+        var [parsedData, indices] = getLineInfoToModify(optionPassed),
+            dataToPrint = [];
+
+        indices.forEach((index) => {
+            parsedData[index].isActive = true;
+            parsedData[index].rawData = parsedData[index].rawData.replace(/^#/, '');
+            dataToPrint.push(parsedData[index])
+        });
+       if (updateFile(parsedData))
+            print(dataToPrint);
+    };
+
+    // Function that activate line or group number
+    self.deActivate = function(optionPassed) {
+        var [parsedData, indices] = getLineInfoToModify(optionPassed),
+            dataToPrint = [];
+        indices.forEach((index) => {
+            parsedData[index].isActive = false;
+            parsedData[index].rawData = '#' + parsedData[index].rawData;
+            dataToPrint.push(parsedData[index])
+        });
+        if (updateFile(parsedData))
+            print(dataToPrint);
+    };
+
+    function updateFile(parsedData) {
+        var backupFilePath = backupFile();
+        var status = true;
+        var dataToWrite = '';
+        parsedData.forEach(lineInfo => {
+            dataToWrite += lineInfo.rawData + os.EOL;
+        });
+        fs.writeFile(utility.getFullFilePath(), dataToWrite, (error) => {
+            if (error) {
+                restore(backupFilePath);
+                console.log('Failed to update file.');
+                console.log(error);
+                status = false;
+            }
+            fs.unlinkSync(backupFilePath);
+        });
+        return status;
+    }
+
+    function getLineInfoToModify(optionPassed) {
+        if (!optionPassed) {
+            throw new Error('Insufficient arguments passed. Require line number or group number');
+        }
+        var option = Object.keys(optionPassed)[0];
+        var optionValue = optionPassed[option];
+        var parsedData = parseFileData();
+        var indices = [];
+        parsedData.forEach((lineInfo, index) => {
+            if (lineInfo.isValid && ((option === 'n' && lineInfo.lineNumber == optionValue) || (option == 'g' && lineInfo.groupInfo.id == optionValue))) {
+                indices.push(index);
+            }
+        });
+        return [parsedData, indices];
+    }
+
+    function parseFileData() {
+        const fileData = readFile(utility.getFullFilePath());
+        var parsedData = [];
+        var prevLineInfo = newLineInfo();
+        var groupId = 1;
+        var groupInfo = {};
+        fileData.forEach((line, lineNumber) => {
+            let currentLineInfo = getLineInfo(line, lineNumber);
+            if (!prevLineInfo.isValid && currentLineInfo.isValid) {
+                groupInfo = getGroupInfo(prevLineInfo, groupId);
+                parsedData[lineNumber - 1].groupInfo = groupInfo;
+                groupId++;
+            }
+            if (!currentLineInfo.isValid) {
+                groupInfo = {};
+            }
+            currentLineInfo.groupInfo = groupInfo;
+            parsedData[lineNumber] = currentLineInfo;
+            prevLineInfo = currentLineInfo;
+        });
+        return parsedData;
     }
 
     function print(lineInfo) {
+        var groupInfo;
+        var groupId;
         lineInfo.forEach((info) => {
             let output = '';
-            if (!info.isEmpty) {
-                if (info.isValid) {
-                    output += info.lineNumber;
-                    output += ' ' + info.ip;
-                    info.domains.forEach((domain) => {
-                        output += ' ' + domain;
-                    });
-                    output += info.isActive ? ' ACTIVE' : ' DISABLED'
-                } else if(info.groupInfo.name) {
-                    output += info.lineNumber;
-                    output += ' Group - ' + info.groupInfo.name;
-                    if (info.groupInfo.env !== '') {
-                        output += ' | Environment - ' + info.groupInfo.env;
+            if (!info.isEmpty && info.isValid) {
+                groupInfo = info.groupInfo;
+                if (groupId !== groupInfo.id) {
+                    output += os.EOL + '#' + groupInfo.id + os.EOL;
+                    output += groupInfo.name.toUpperCase() + os.EOL;
+                    if (groupInfo.env) {
+                        output += groupInfo.env.toUpperCase() + os.EOL;
                     }
+                    output += "Line\tIP Domains" + os.EOL;
                 }
+                output += '#' + info.lineNumber + "\t" + info.ip;
+                info.domains.forEach((domain) => {
+                    output += ' ' + domain;
+                });
+                groupId = groupInfo.id;
             }
             if (output !== '') {
-                console.log(output);
+                console.log(info.isActive ? output.green : output.red);
             }
         });
+        console.log(os.EOL);
     }
 
     function readFile(filePath) {
@@ -90,50 +180,76 @@ function processes() {
         return info;
     }
 
-    function markAsGroup(lineInfo) {
-        var env = '';
+    function getEnvFromLineData(lineData) {
+        let env = '';
         contants.env.forEach((e) => {
-            if (lineInfo.lineData.toLowerCase().indexOf(e) !== -1) {
+            if (lineData.toLowerCase().indexOf(e) !== -1) {
                 env = e;
                 return;
             }
         });
-        lineInfo.groupInfo = {
-            name: lineInfo.lineData,
-            env: env
-        };
-        lineInfo.isGroupInfo = true;
-        return lineInfo;
+        return env;
+    }
+
+    function getGroupInfo(lineInfo, groupId) {
+        var env = getEnvFromLineData(lineInfo.lineData);
+        var name = lineInfo.lineData || contants.defaultGroupNamePrefix + groupId;
+        if (env !== '') {
+            var index = lineInfo.lineData.toLowerCase().indexOf(env);
+            name = lineInfo.lineData.slice(0, index - 1).trim() || contants.defaultGroupNamePrefix + groupId;
+        }
+    
+        return newGroupInfo(groupId, name, env);
     }
 
     return self;
 }
 
+function newGroupInfo(id, name, env) {
+    var self = {
+        id: id,
+        name: name,
+        env: env
+    }
+    return self;
+}
+
 function newLineInfo(lineNumber) {
     var self = {
-        lineNumber: lineNumber + 1,
+        // Line number in hosts file
+        lineNumber: lineNumber !== undefined ? lineNumber + 1 : null,
 
+        // Full content of the line
         rawData: '',
 
+        // Is line empty (new line)
         isEmpty: false,
 
         // Is valid ip domain enrty
         isValid: false,
 
+        // Is this hosts entry part of a user defined group
         isGroupInfo: false,
 
+        // Parsed line data. Can be either group info (comments added before a set of entries) or 
+        // IP - domain set as individual line
         lineData: '',
 
-        // Details of group info
+        // Details of group info (comments added before a set of entries)
+        // Currently supports env parsing in the format
+        // <Group Name - Can be project or domain><SPACE><Environment - 'dev','local','prod','uat','stage'>
+        // For example
+        //      #mydomain.com uat
+        //      #domain local
         groupInfo: {},
 
         // IP
         ip: '',
 
-        // Domains
+        // Domains - list of all domains mentioned in the line
         domains: [],
 
-        // Is entry active
+        // Is entry active - If the line is commented out, it is marked as
         isActive: false
     };
 

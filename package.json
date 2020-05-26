@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/shivam-thapar/manage-hosts#readme",
   "dependencies": {
+    "colors": "^1.4.0",
     "moment": "^2.25.1",
     "yargs": "^15.3.1"
   }

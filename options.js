@@ -27,6 +27,47 @@ const options = {
         boolean: true,
         // Custom key to set function which will get executed when this option is passed as argument
         callBackFn: processes.backup
+    },
+    a: {
+        alias: 'activate',
+        describe: 'Activate a line number or group number. Requires line number (-n | --line-number) or group (-g | --group)',
+        depends: {
+            options: ['n', 'g'],
+            describe: 'Requires line number (-n | --line-number) or group (-g | --group)',
+            preferred: true
+        },
+        callBackFn: processes.activate
+    },
+    d: {
+        alias: 'de-activate',
+        describe: 'De-activate a line number or group number. Requires line number (-n | --line-number) or group (-g | --group)',
+        depends: {
+            options: ['n', 'g'],
+            describe: 'Requires line number (-n | --line-number) or group (-g | --group)',
+            preferred: true
+        },
+        callBackFn: processes.deActivate
+    },
+    n: {
+        alias: 'line-number',
+        requiresArg: true,
+        conflicts: 'g',
+        depends: {
+            options: ['a', 'd'],
+            describe: 'Requires activate option (-a | --activate) or de-activate option (-d | --de-activate)'
+        },
+        type: 'number',
+        describe: 'The line number to be activated or de-activated. Requires activate option (-a | --activate) or de-activate option (-d | --de-activate)'
+    },
+    g: {
+        alias: 'group',
+        requiresArg: true,
+        depends: {
+            options: ['a', 'd'],
+            describe: 'Requires activate option (-a | --activate) or de-activate option (-d | --de-activate)'
+        },
+        type: 'number',
+        describe: 'The group number to be activated or de-activated. Requires activate option (-a | --activate) or de-activate option (-d | --de-activate)'
     }
 };
 
