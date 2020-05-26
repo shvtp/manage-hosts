@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 const options = require("./options");
 const yargs = require("yargs");
 
