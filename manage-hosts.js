@@ -43,22 +43,31 @@ const { exit } = require("process");
         return formatByGroup(dataToReturn);
     }
 
-    /**
-     * 
-     * @param {LineInfo[]} lineInfos 
-     */
     function formatByGroup(lineInfos) {
-        var returnData = [];
+        var returnData = {};
+        lineInfos.forEach((lineInfo) => {
+            let groupId = lineInfo.groupInfo.id;
+            if (!returnData.hasOwnProperty(groupId)) {
+                returnData[groupId] = {
+                    groupInfo: lineInfo.groupInfo,
+                    lineInfos: []
+                }
+            }
+            returnData[groupId].lineInfos.push(lineInfo);
+        });
         return returnData;
     }
 
     function list(optionPassed) {
-        var [parsedData, indices] = searchLineInfo(optionPassed),
-            dataToPrint = [];
-
-        indices.forEach((index) => {
-            dataToPrint.push(parsedData[index])
-        });
+        var dataToPrint = [];
+        if(Object.keys(optionPassed).length == 0) {
+            dataToPrint = parseFileData();
+        } else {
+            var [parsedData, indices] = searchLineInfo(optionPassed);
+            indices.forEach((index) => {
+                dataToPrint.push(parsedData[index])
+            });
+        }
         print(dataToPrint);
     }
 
@@ -215,7 +224,8 @@ const { exit } = require("process");
         var indices = [];
         for(var option in optionPassed) {
             if(optionPassed.hasOwnProperty(option)) {
-                let optionValue = optionPassed[option].toLowerCase();
+                let optionValue = typeof optionPassed[option] === 'string' ?
+                    optionPassed[option].toLowerCase() : optionPassed[option];
                 [dataToSearch, indices] = searchByOptionValue(dataToSearch, option, optionValue);
             }
         }
