@@ -1,5 +1,5 @@
 {
-  "name": "manage-hosts",
+  "name": "@shvtp/manage-hosts",
   "version": "2.0.0",
   "description": "Managing the hosts and ip addresses in /etc/hosts file",
   "main": "manage-hosts.js",
@@ -20,6 +20,6 @@
     "moment": "^2.25.1"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   }
 }
