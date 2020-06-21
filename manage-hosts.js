@@ -58,47 +58,6 @@ const { exit } = require("process");
         return returnData;
     }
 
-    function list(optionPassed) {
-        var dataToPrint = [];
-        if(Object.keys(optionPassed).length == 0) {
-            dataToPrint = parseFileData();
-        } else {
-            var [parsedData, indices] = searchLineInfo(optionPassed);
-            indices.forEach((index) => {
-                dataToPrint.push(parsedData[index])
-            });
-        }
-        print(dataToPrint);
-    }
-
-    function print(lineInfo) {
-        var groupInfo;
-        var groupId;
-        lineInfo.forEach((info) => {
-            let output = '';
-            if (!info.isEmpty && info.isValid) {
-                groupInfo = info.groupInfo;
-                if (groupId !== groupInfo.id) {
-                    output += os.EOL + '#' + groupInfo.id + os.EOL;
-                    output += groupInfo.name.toUpperCase() + os.EOL;
-                    if (groupInfo.env) {
-                        output += groupInfo.env.toUpperCase() + os.EOL;
-                    }
-                    output += "Line\tIP Domains" + os.EOL;
-                }
-                output += '#' + info.lineNumber + "\t" + info.ip;
-                info.domains.forEach((domain) => {
-                    output += ' ' + domain;
-                });
-                groupId = groupInfo.id;
-            }
-            if (output !== '') {
-                console.log(info.isActive ? output.green : output.red);
-            }
-        });
-        console.log(os.EOL);
-    }
-
     function readFile() {
         const file = fs.readFileSync(hostsFilePath).toString();
         return file.split(os.EOL);
@@ -200,7 +159,7 @@ const { exit } = require("process");
             dataToPrint.push(parsedData[index])
         });
         if (updateFile(parsedData))
-            print(dataToPrint);
+            return formatByGroup(dataToPrint);
     }
 
     function deActivate(optionPassed) {
@@ -212,7 +171,7 @@ const { exit } = require("process");
             dataToPrint.push(parsedData[index])
         });
         if (updateFile(parsedData))
-            print(dataToPrint);
+            return formatByGroup(dataToPrint);
     };
 
     function searchLineInfo(optionPassed) {
@@ -281,11 +240,11 @@ const { exit } = require("process");
 
     var Hosts = function(fileName) {
         init(fileName);
-        this.list = list;
         this.backup = backup;
         this.activate = activate;
         this.deActivate = deActivate;
         this.search = search;
+        this.getBackupFilePath = getBackupFilePath;
     };
 
     return Hosts;
