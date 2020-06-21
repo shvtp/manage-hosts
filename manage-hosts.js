@@ -34,12 +34,16 @@ const { exit } = require("process");
     }
 
     function search(optionPassed) {
-        var [parsedData, indices] = searchLineInfo(optionPassed),
+        var dataToReturn;
+        if (Object.keys(optionPassed).length === 0) {
+            dataToReturn = parseFileData();
+        } else {
             dataToReturn = [];
-
-        indices.forEach((index) => {
-            dataToReturn.push(parsedData[index])
-        });
+            var [parsedData, indices] = searchLineInfo(optionPassed);
+            indices.forEach((index) => {
+                dataToReturn.push(parsedData[index])
+            });
+        }
         return formatByGroup(dataToReturn);
     }
 
@@ -47,13 +51,16 @@ const { exit } = require("process");
         var returnData = {};
         lineInfos.forEach((lineInfo) => {
             let groupId = lineInfo.groupInfo.id;
-            if (!returnData.hasOwnProperty(groupId)) {
-                returnData[groupId] = {
-                    groupInfo: lineInfo.groupInfo,
-                    lineInfos: []
+            if(groupId) {
+                if (!returnData.hasOwnProperty(groupId)) {
+                    returnData[groupId] = {
+                        groupInfo: lineInfo.groupInfo,
+                        lineInfos: []
+                    }
                 }
+                if(lineInfo.isValid)
+                    returnData[groupId].lineInfos.push(lineInfo);
             }
-            returnData[groupId].lineInfos.push(lineInfo);
         });
         return returnData;
     }
