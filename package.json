@@ -1,6 +1,6 @@
 {
   "name": "@shvtp/manage-hosts",
-  "version": "2.0.0",
+  "version": "2.0.0-beta.3",
   "description": "Managing the hosts and ip addresses in /etc/hosts file",
   "main": "manage-hosts.js",
   "scripts": {
