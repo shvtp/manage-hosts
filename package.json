@@ -18,5 +18,8 @@
   "homepage": "https://github.com/shivam-thapar/manage-hosts#readme",
   "dependencies": {
     "moment": "^2.25.1"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   }
 }
