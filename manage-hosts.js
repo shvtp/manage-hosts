@@ -1,5 +1,3 @@
-const { exit } = require("process");
-
 ;(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     global.manageHosts = factory()
@@ -124,7 +122,8 @@ const { exit } = require("process");
         var name = lineInfo.lineData || constants.defaultGroupNamePrefix + groupId;
         if (env !== '') {
             var index = lineInfo.lineData.toLowerCase().indexOf(env);
-            name = lineInfo.lineData.slice(0, index - 1).trim() || constants.defaultGroupNamePrefix + groupId;
+            name = lineInfo.lineData.slice(0, index - 1).trim() ||
+                constants.defaultGroupNamePrefix + groupId;
         }
         return new GroupInfo(groupId, name, env);
     }
